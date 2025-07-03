@@ -1,0 +1,64 @@
+import mundial.*
+
+describe "Mundial de Clubes, introducción" {
+  const zenon = new Jugador(nombre = "Zenón", precioBase = 10)
+  const merentiel = new Jugador(nombre = "Merentiel", precioBase = 7)
+  const romero = new Jugador(nombre = "Romero", precioBase = 3)
+  const boca = new EquipoConmebol(
+    popularidad = 5,
+    hinchada = hinchadaEntusiasta,
+    jugadores = #{zenon, merentiel, romero}
+  )
+  const messi = new Jugador(nombre = "Messi", precioBase = 50)
+  const ustari = new Jugador(nombre = "Ustari", precioBase = 2)
+  const inter = new EquipoLocal(habitantes = 0.5, jugadores = #{messi, ustari})
+  const pepe1 = new Jugador(nombre = "Pepe1", precioBase = 57)
+  const pepe2 = new Jugador(nombre = "Pepe2", precioBase = 100)
+  const pepe3 = new Jugador(nombre = "Pepe3", precioBase = 115)
+  const real = new EquipoEuropeo(champions = 15, jugadores = #{pepe1, pepe2, pepe3})
+  
+  test "Cotizacion de los jugadores de Boca" {
+    assert.equals(50, zenon.cotizacion())
+    assert.equals(63, merentiel.cotizacion())
+    assert.equals(18, romero.cotizacion())
+  }
+  
+  test "Potencial de Boca con hinchada entusiasta" {
+    assert.equals(25, boca.motivacion())
+    assert.equals(131, boca.valoracionPlantel())
+    assert.equals(3275, boca.potencial())
+  }
+  
+  test "Motivación y Potencial de Boca con hinchada pecho frío" {
+    boca.hinchada(hinchadaPechoFrio)
+    assert.equals(1, boca.motivacion())
+    assert.equals(131, boca.valoracionPlantel())
+    assert.equals(131, boca.potencial())
+  }
+  
+  test "Cotizacion de los jugadores de Inter" {
+    assert.equals(250, messi.cotizacion())
+    assert.equals(12, ustari.cotizacion())  
+  }
+  
+  test "Valoracion del Inter" {
+    assert.equals(131, inter.potencial())
+    assert.equals(262, inter.valoracionPlantel())
+  }
+  
+  test "Cotizacion de los jugadores de Real Madrid" {
+    assert.equals(285, pepe1.cotizacion())
+    assert.equals(500, pepe2.cotizacion())
+    assert.equals(575, pepe3.cotizacion())
+    assert.equals(1360, real.valoracionPlantel())
+  }
+  
+  test "Valoración y Potencial de Real Madrid" {
+    assert.equals(1360, real.valoracionPlantel())
+    assert.equals(20400, real.potencial())
+  }
+  
+  test "Partido Real vs Boca" {
+    const partido = new Partido(local = real, visitante = boca)
+  }
+}
