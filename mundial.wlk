@@ -52,6 +52,20 @@ class EquipoLocal inherits Equipo {
 
 class Ciudad {
   var property poblacion
+} // Clase abstracta Resultado
+
+class Resultado {
+  method ganador()
+} // Clase Victoria: representa que un equipo ganó
+
+class Victoria inherits Resultado {
+  var equipo
+  
+  override method ganador() = equipo
+} // Clase Empate: representa un empate (no hay ganador)
+
+class Empate inherits Resultado {
+  override method ganador() = null
 }
 
 class Partido {
@@ -78,6 +92,18 @@ class Partido {
         return 0
       } else {
         return 1
+      }
+    }
+  }
+  
+  method resultado() {
+    if (local.leGanaA(visitante)) {
+      return new Victoria(equipo = local)
+    } else {
+      if (visitante.leGanaA(local)) {
+        return new Victoria(equipo = visitante)
+      } else {
+        return new Empate()
       }
     }
   }
