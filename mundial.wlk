@@ -8,7 +8,9 @@ class Jugador {
 class Equipo {
   var property jugadores
   
-  method valoracionPlantel() = jugadores.filter({ j => j.cotizacion() > 1 }).sum({ j => j.cotizacion() })
+  method valoracionPlantel() = jugadores.filter(
+    { j => j.cotizacion() > 1 }
+  ).sum({ j => j.cotizacion() })
   
   method potencial() = self.valoracionPlantel()
   
@@ -18,7 +20,7 @@ class Equipo {
 class EquipoEuropeo inherits Equipo {
   var champions
   
-  method potencial() = super() * champions
+  override method potencial() = super() * champions
 }
 
 class EquipoConmebol inherits Equipo {
@@ -27,7 +29,7 @@ class EquipoConmebol inherits Equipo {
   
   method motivacion() = hinchada.motivacion(self)
   
-  method potencial() = super() * self.motivacion()
+  override method potencial() = super() * self.motivacion()
 }
 
 object hinchadaEntusiasta {
@@ -43,23 +45,40 @@ object hinchadaMercenaria {
 }
 
 class EquipoLocal inherits Equipo {
-  var habitantes
+  const ciudad
   
-  override method potencial() = self.valoracionPlantel() * habitantes
+  override method potencial() = super() * ciudad.poblacion()
+}
+
+class Ciudad {
+  var property poblacion
 }
 
 class Partido {
   const local
   const visitante
   
-  method hayGanador() = local.leGanaA(visitante) or visitante.leGanaA(local)
-  
-  method hayEmpate() = (not local.leGanaA(visitante)) and (not visitante.leGanaA(local))
-  
-  method ganador() {
-    if (local.leGanaA(visitante)) {
-      return local
+  method adversario(equipo) {
+    if (equipo == local) {
+      return visitante
+    } else {
+      if (equipo == visitante) {
+        return local
+      } else {
+        self.error("Equipo no válido!")
+      }
     }
-    return visitante
+  }
+  
+  method puntosPosiblesPara(equipo) {
+    if (equipo.leGanaA(self.adversario(equipo))) {
+      return 3
+    } else {
+      if (self.adversario(equipo).leGanaA(equipo)) {
+        return 0
+      } else {
+        return 1
+      }
+    }
   }
 }
