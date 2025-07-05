@@ -1,101 +1,154 @@
-class Equipo {
-  const jugadores = [] 
-
-  //method potencial() = self.valoracion() 
-  method potencial() = self.valoracion() * self.potencialExtra()
-  method valoracion() = jugadores.filter{j=>j.cotizacion()>1}.sum{j=>j.cotizacion()}
-  method potencialExtra() = 1
-  method seVaElDeMayorCotizacion() {
-      jugadores.remove(self.elDeMayorCotizacion())
-  }
-  method elDeMayorCotizacion() = jugadores.max{j=>j.cotizacion()}
-}
-
-class EquipoConmebol inherits Equipo{
-  var estiloHinchada = entusiasta
-  var property popularidad
-
-  //override method potencial() = super() * estiloHinchada.motivacion(self)
-  override method potencialExtra() = estiloHinchada.motivacion(self)
-  method aumentoPublico(cantidad) {
-    popularidad = popularidad + cantidad 
-    estiloHinchada = estiloHinchada.masPublico()
-  }
-}
-
-object entusiasta{
-  method motivacion(equipo) = equipo.popularidad() * equipo.popularidad()
-  method masPublico() = self
-}
-
-object pechoFrio{
-  method motivacion(equipo) = (equipo.popularidad() / 10).max(1)
-  method masPublico() = entusiasta
-}
-
-object mercenaria{
-  method motivacion(equipo) = equipo.valoracion() * 0.01
-  method masPublico() = pechoFrio
-}
-
-class EquipoEuropeo inherits Equipo{
-  var champions = 0
-  //override method potencial() = super() * champions
-  override method potencialExtra() = champions
-
-}
-
-class EquipoEEUU inherits Equipo{
-  const ciudad
-  //override method potencial() = super() * ciudad.poblacion()
-  override method potencialExtra() =  ciudad.poblacion()
+class Jugador {
+  const property nombre
+  var precioBase
   
+  method cotizacion() = nombre.length() * precioBase
+}
+
+class Equipo {
+  const property jugadores = #{}
+  
+  method jugadoresMejorCotizacion() = jugadores.filter({ j => j.cotizacion() > 1 })
+  
+  method valoracionPlantel() = self.jugadoresMejorCotizacion().sum({ j => j.cotizacion() })
+  
+  method potencial() = self.valoracionPlantel()
+  
+  method leGanaA(equipo) = self.potencial() > (equipo.potencial() * 1.2)
+}
+
+class EquipoEuropeo inherits Equipo {
+  var champions
+  
+  override method potencial() = super() * champions
+}
+
+class EquipoConmebol inherits Equipo {
+  var popularidad
+  var hinchada
+  
+  method hinchada(nuevaHinchada) {
+    hinchada = nuevaHinchada
+  }
+  
+  method popularidad() = popularidad
+  
+  method motivacion() = hinchada.motivacion(self)
+  
+  override method potencial() = super() * self.motivacion()
+}
+
+object hinchadaEntusiasta {
+  method motivacion(equipo) = equipo.popularidad() ** 2
+}
+
+object hinchadaPechoFrio {
+  method motivacion(equipo) = 1.max(equipo.popularidad() * 0.1)
+}
+
+object hinchadaMercenaria {
+  method motivacion(equipo) = equipo.valoracionPlantel() * 0.01
+}
+
+class EquipoLocal inherits Equipo {
+  const ciudad
+  
+  override method potencial() = super() * ciudad.poblacion()
 }
 
 class Ciudad {
-  var property poblacion 
+  var property poblacion
 }
 
-
-class Jugador{
-  var monto
-  const nombre
-  method cotizacion() = monto * nombre.length()
+class Resultado {
+  method ganador()
 }
 
-class JugadorPremiado inherits Jugador{
-  var premio
-  override method cotizacion() = super() + premio
+class Victoria inherits Resultado {
+  const equipo
+  
+  override method ganador() = equipo
 }
 
-class Partido{
-  const equipo1
-  const equipo2
-  method cuantosPuntosHizo(equipo) {
-    const otro = self.adversario(equipo)  
-    if (equipo.potencial() > otro.potencial())
-      return 3
-    else if (equipo.potencial() == otro.potencial())
-      return 1
-    else 
-      return 0
+class Empate inherits Resultado {
+  override method ganador() = null
+}
+
+class Partido {
+  const local
+  const visitante
+  
+  method jugo(equipo) = equipo == local or equipo == visitante
+
+  method adversario(equipo) {
+    if (equipo == local) {
+      return visitante
+    } else {
+      if (equipo == visitante) {
+        return local
+      } else {
+        self.error("Equipo no válido!")
+      }
+    }
   }
-  method adversario(equipo) = if (equipo == equipo1) equipo2 else equipo1 
-  method jugo(equipo) = equipo == equipo1 or equipo == equipo2
+  
+  method puntosPosiblesPara(equipo) {
+    if (equipo.leGanaA(self.adversario(equipo))) {
+      return 3
+    } else {
+      if (self.adversario(equipo).leGanaA(equipo)) {
+        return 0
+      } else {
+        return 1
+      }
+    }
+  }
+  
+  method resultado() {
+    if (local.leGanaA(visitante)) {
+      return new Victoria(equipo = local)
+    } else {
+      if (visitante.leGanaA(local)) {
+        return new Victoria(equipo = visitante)
+      } else {
+        return new Empate()
+      }
+    }
+  }
 }
 
 class Grupo {
-  const partidos= []
-  const equipos = []
+  const property equipos = #{}
+  const property partidos = #{}
 
-  method crearPartido(e1, e2){
-    const p = new Partido(equipo1 = e1, equipo2 = e2)
-    partidos.add(p)
+  method agregarPartido(unEquipo, otroEquipo) {
+    // Si fuese lista
+    /*
+    if (not equipos.contains(unEquipo)) {
+      equipos.add(unEquipo)
+    }
+    if (not equipos.contains(otroEquipo)) {
+      equipos.add(otroEquipo)
+    }
+    */
+
+    // Si es conjunto
+    // en caso de utilizar generarPartidos estas dos lineas van comentadas
+    //equipos.add(unEquipo)
+    //equipos.add(otroEquipo)
+    partidos.add(new Partido(local=unEquipo, visitante=otroEquipo))
   }
 
-  method puntosDe(equipo) = partidos.filter{p=>p.jugo(equipo)}.sum{p=>p.cuantosPuntosHizo(equipo)}
-
-  method guerraComercial(){
-    equipos.forEach{e=>e.seVaElDeMayorCotizacion()}
+  method generarPartidos() {
+    equipos.forEach({e=>
+      equipos.remove(e)
+      equipos.forEach({resto=>
+        self.agregarPartido(e, resto)
+      })
+    })
   }
+
+  method partidosJugadosPor(equipo) = partidos.filter({p=>p.jugo(equipo)})
+
+  method puntos(equipo) = self.partidosJugadosPor(equipo).sum({p=>p.puntosPosiblesPara(equipo)})
 }

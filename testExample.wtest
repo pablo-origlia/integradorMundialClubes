@@ -1,0 +1,141 @@
+import example.*
+
+describe "Mundial de Clubes" {
+  const zenon = new Jugador(nombre = "Zenón", precioBase = 10)
+  const merentiel = new Jugador(nombre = "Merentiel", precioBase = 7)
+  const romero = new Jugador(nombre = "Romero", precioBase = 3)
+  const boca = new EquipoConmebol(
+    popularidad = 5,
+    hinchada = hinchadaEntusiasta,
+    jugadores = #{zenon, merentiel, romero}
+  )
+  const messi = new Jugador(nombre = "Messi", precioBase = 50)
+  const ustari = new Jugador(nombre = "Ustari", precioBase = 2)
+  const miami = new Ciudad(poblacion = 0.5)
+  const inter = new EquipoLocal(ciudad = miami, jugadores = #{messi, ustari})
+  const pepe1 = new Jugador(nombre = "Pepe1", precioBase = 57)
+  const pepe2 = new Jugador(nombre = "Pepe2", precioBase = 100)
+  const pepe3 = new Jugador(nombre = "Pepe3", precioBase = 115)
+  const real = new EquipoEuropeo(champions = 15, jugadores = #{pepe1, pepe2, pepe3})
+  
+  const grupoA = new Grupo()
+  
+  test "Cotizacion de los jugadores de Boca" {
+    assert.equals(50, zenon.cotizacion())
+    assert.equals(63, merentiel.cotizacion())
+    assert.equals(18, romero.cotizacion())
+  }
+  
+  test "Potencial de Boca con hinchada entusiasta" {
+    assert.equals(25, boca.motivacion())
+    assert.equals(131, boca.valoracionPlantel())
+    assert.equals(3275, boca.potencial())
+  }
+  
+  test "Motivación y Potencial de Boca con hinchada pecho frío" {
+    boca.hinchada(hinchadaPechoFrio)
+    assert.equals(1, boca.motivacion())
+    assert.equals(131, boca.valoracionPlantel())
+    assert.equals(131, boca.potencial())
+  }
+  
+  test "Cotizacion de los jugadores de Inter" {
+    assert.equals(250, messi.cotizacion())
+    assert.equals(12, ustari.cotizacion())
+  }
+  
+  test "Valoracion del Inter" {
+    assert.equals(131, inter.potencial())
+    assert.equals(262, inter.valoracionPlantel())
+  }
+  
+  test "Cotizacion de los jugadores de Real Madrid" {
+    assert.equals(285, pepe1.cotizacion())
+    assert.equals(500, pepe2.cotizacion())
+    assert.equals(575, pepe3.cotizacion())
+    assert.equals(1360, real.valoracionPlantel())
+  }
+  
+  test "Valoración y Potencial de Real Madrid" {
+    assert.equals(1360, real.valoracionPlantel())
+    assert.equals(20400, real.potencial())
+  }
+  
+  test "Partido Real vs Boca, gana Real" {
+    const partido = new Partido(local = real, visitante = boca)
+    assert.equals(boca, partido.adversario(real))
+    assert.equals(real, partido.adversario(boca))
+    assert.equals(real, partido.resultado().ganador())
+    assert.equals(3, partido.puntosPosiblesPara(real))
+    assert.equals(0, partido.puntosPosiblesPara(boca))
+  }
+  
+  test "Partido Real vs Inter, gana Real" {
+    const partido = new Partido(local = inter, visitante = real)
+    assert.equals(inter, partido.adversario(real))
+    assert.equals(real, partido.adversario(inter))
+    assert.equals(real, partido.resultado().ganador())
+    assert.equals(3, partido.puntosPosiblesPara(real))
+    assert.equals(0, partido.puntosPosiblesPara(inter))
+  }
+  
+  test "Partido Boca vs Inter, gana Boca" {
+    const partido = new Partido(local = inter, visitante = boca)
+    assert.equals(inter, partido.adversario(boca))
+    assert.equals(boca, partido.adversario(inter))
+    assert.equals(boca, partido.resultado().ganador())
+    assert.equals(3, partido.puntosPosiblesPara(boca))
+    assert.equals(0, partido.puntosPosiblesPara(inter))
+  }
+  
+  test "Partido Boca vs Inter, con hinchada pecho frio (Boca), empate" {
+    boca.hinchada(hinchadaPechoFrio)
+    const partido = new Partido(local = inter, visitante = boca)
+    assert.equals(inter, partido.adversario(boca))
+    assert.equals(boca, partido.adversario(inter))
+    assert.equals(null, partido.resultado().ganador())
+    assert.equals(1, partido.puntosPosiblesPara(boca))
+    assert.equals(1, partido.puntosPosiblesPara(inter))
+  }
+  
+  test "Partido Boca vs Inter, con hinchada pecho frio (Boca) y sin Zenon, gana Inter" {
+    boca.hinchada(hinchadaPechoFrio)
+    boca.jugadores().remove(zenon)
+    
+    const partido = new Partido(local = inter, visitante = boca)
+    assert.equals(inter, partido.adversario(boca))
+    assert.equals(boca, partido.adversario(inter))
+    assert.equals(inter, partido.resultado().ganador())
+    assert.equals(0, partido.puntosPosiblesPara(boca))
+    assert.equals(3, partido.puntosPosiblesPara(inter))
+  }
+  
+  test "Partido Boca vs Inter, con hinchada pecho frio (Boca) y sin Romero, empate" {
+    boca.hinchada(hinchadaPechoFrio)
+    boca.jugadores().remove(romero)
+    const partido = new Partido(local = inter, visitante = boca)
+    assert.equals(inter, partido.adversario(boca))
+    assert.equals(boca, partido.adversario(inter))
+    assert.equals(null, partido.resultado().ganador())
+    assert.equals(1, partido.puntosPosiblesPara(boca))
+    assert.equals(1, partido.puntosPosiblesPara(inter))
+  }
+  
+  test "Generar grupo" {
+    const seatle = new Ciudad(poblacion = 2)
+    const rocket = new EquipoLocal(ciudad = seatle, jugadores = #{})
+
+    grupoA.equipos().addAll(#{inter, real, boca, rocket})
+
+    assert.equals(#{inter, real, boca, rocket}, grupoA.equipos())
+
+    grupoA.generarPartidos()
+
+    assert.equals(6, grupoA.partidos().size())
+    
+    assert.equals(3, grupoA.partidosJugadosPor(rocket).size())
+    assert.equals(3, grupoA.partidosJugadosPor(inter).size())
+    assert.equals(3, grupoA.partidosJugadosPor(boca).size())
+    assert.equals(3, grupoA.partidosJugadosPor(real).size())
+  }
+}
